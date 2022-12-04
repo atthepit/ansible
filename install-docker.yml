@@ -1,0 +1,45 @@
+- hosts: localhost
+  become: true
+  vars:
+    kerying_path: /etc/apt/keyrings
+    docker_gpg: "{{ kerying_path }}/docker.gpg"
+    deb_architecture: { "armv6l": "armhf", "armv7l": "armhf", "aarch64": "arm64", "x86_64": "amd64", "i386": "i386" }
+
+  tasks:
+    - name: allow apt to use a repository over HTTPS
+      apt:
+        pkg:
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+        update_cache: true
+    - name: create keyring folder
+      file:
+        path: "{{ kerying_path }}"
+    - name: check if gpg key is already installed
+      stat:
+        path: "{{ docker_gpg }}"
+      register: gpg_exists
+    - name: Add Docker's oficial GPG key
+      shell: "curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o {{ docker_gpg }}"
+      when: not gpg_exists.stat.exists
+    - name: Setup docker repository
+      apt_repository:
+        repo: "deb [arch={{ [ansible_architecture] | map('extract', deb_architecture) | first }} signed-by={{ docker_gpg }}] https://download.docker.com/{{ ansible_system | lower }}/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} stable"
+        state: present
+    - name: download latest deb package
+      get_url:
+        url: https://desktop.docker.com/linux/main/amd64/docker-desktop-4.15.0-amd64.deb?utm_source=docker&utm_medium=webreferral&utm_campaign=docs-driven-download-linux-amd64
+        dest: ./docker-desktop-4.15.0-amd64.deb
+    - name: Install deb pkg
+      apt:
+        deb: ./docker-desktop-4.15.0-amd64.deb
+        update_cache: true
+    - name: run docker desktop
+      become: false
+      systemd:
+        name: docker-desktop
+        scope: user
+        state: started
+        enabled: true
