@@ -1,0 +1,52 @@
+- name: Install deps
+  apt:
+    pkg:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - software-properties-common
+    update_cache: true
+  tags:
+    - docker
+- name: Add GPG key
+  apt_key:
+    url: "https://download.docker.com/{{ ansible_system | lower }}/{{ ansible_distribution | lower }}/gpg"
+    state: present
+  tags:
+    - docker
+- name: Add repo
+  apt_repository:
+    repo: "deb [arch={{ [ansible_architecture] | map('extract', deb_architecture) | first }}] https://download.docker.com/{{ ansible_system | lower }}/{{ ansible_distribution | lower }} {{ ansible_distribution_release | lower }} stable"
+    state: present
+  tags:
+    - docker
+- name: Install Docker CE
+  apt:
+    pkg:
+      - docker-ce
+      - docker-compose-plugin
+    state: latest
+    update_cache: true
+  tags:
+    - docker
+- name: Ensure docker group exists
+  group:
+    name: docker
+    state: present
+  tags:
+    - docker
+- name: Ensure user belongs to docker group
+  user:
+    name: pit
+    groups: docker
+    append: true
+  tags:
+    - docker
+- name: Ensure docker runs on startup
+  become: false
+  systemd:
+    name: docker
+    state: started
+    enabled: true
+  tags:
+    - docker
