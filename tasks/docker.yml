@@ -37,7 +37,7 @@
     - docker
 - name: Ensure user belongs to docker group
   user:
-    name: pit
+    name: "{{ user }}"
     groups: docker
     append: true
   tags:

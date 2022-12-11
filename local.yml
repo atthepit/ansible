@@ -1,7 +1,7 @@
 - hosts: localhost
-  become: true
   vars:
     deb_architecture: { "armv6l": "armhf", "armv7l": "armhf", "aarch64": "arm64", "x86_64": "amd64", "i386": "i386" }
+    user: "{{ ansible_user_id }}"
   tasks:
     - include: tasks/ssh.yml
     - include: tasks/docker.yml
