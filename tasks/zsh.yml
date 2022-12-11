@@ -1,0 +1,52 @@
+- name: Ensure zsh is installed
+  apt:
+    name: zsh
+    state: latest
+  tags:
+    - zsh
+- name: Ensure shell for {{user}} is zsh
+  become: true
+  user:
+    name: "{{ user }}"
+    shell: /bin/zsh
+  tags:
+    - zsh
+- name: Check if oh-my-zsh conf already exists
+  stat:
+    path: "{{ lookup('env', 'HOME') }}/.oh-my-zsh"
+  register: oh_my_stats
+  tags:
+    - zsh
+- name: Oh-My-Zsh
+  shell: curl -L https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh > ~/.oh-my-installer && chmod +x ~/.oh-my-installer && ~/.oh-my-installer
+  when: oh_my_stats.stat.exists == False
+  tags:
+    - zsh
+# Install Starship theme
+- name: ensure fonts directory exists
+  file:
+    path: "{{ lookup('env', 'HOME') }}/.fonts"
+    state: directory
+  tags:
+    - zsh
+- name: Check if font is already installed
+  stat:
+    path: "{{ lookup('env', 'HOME') }}/.fonts/FiraCode"
+  register: font_stats
+  tags:
+    - zsh
+- name: Download and install font
+  when: not font_stats.stat.exists
+  unarchive:
+    src: https://github.com/ryanoasis/nerd-fonts/releases/download/v2.2.2/FiraCode.zip
+    dest: "{{ lookup('env', 'HOME') }}/.fonts/"
+    remote_src: true
+  tags:
+    - zsh
+- name: Install starship snap
+  become: true
+  community.general.snap:
+    name: starship
+    state: present
+  tags:
+    - zsh

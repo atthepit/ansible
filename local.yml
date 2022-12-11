@@ -5,4 +5,5 @@
   tasks:
     - include: tasks/ssh.yml
     - include: tasks/docker.yml
+    - include: tasks/zsh.yml
 
