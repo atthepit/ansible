@@ -1,0 +1,13 @@
+- name: Ensure WG and tools are installed
+  become: true
+  apt:
+    name: wireguard
+  tags:
+    - wg
+- name: Add configuration
+  become: true
+  copy:
+    src: ./wireguard/spectrex360.conf
+    dest: /etc/wireguard/spectre.conf
+  tags:
+    - wg
